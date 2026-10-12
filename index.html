@@ -1,0 +1,695 @@
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp, Info, X, BookOpen, Lightbulb, UserCheck, Edit3 } from 'lucide-react';
+
+// 完整定義 Knowledge, Skills, Attitudes (全翻譯為繁體中文)
+const tagDefinitions = {
+  // --- Knowledge (知識) ---
+  "Knowledge: 1.1": "AI 不是人類。AI 系統使用演算法結合逐步程序與統計推論（例如權重與偏差）來處理資料、偵測模式，並根據機率生成輸出。",
+  "Knowledge: 1.2": "機器透過推論如何回應其訓練資料中的模式及接收到的新資訊來「學習」。它們在執行時具有不同程度的自主性、適應性與準確性。這些輸出可以是影響實體或虛擬環境的預測、內容或建議。",
+  "Knowledge: 1.3": "生成式 AI 使用機率來生成跨越多種模態（如文字、音訊、視覺）的進階輸出，但缺乏真實的人類理解與意圖。",
+  "Knowledge: 1.4": "有許多類型的 AI 系統，其運作方式取決於其目的、程式設計和訓練資料。根據工具的類型，使用者可能知道他們正在與 AI 互動；而在其他時候，AI 系統可能在背景運作，或作為工具的一部分，其影響並不顯而易見。",
+  "Knowledge: 1.5": "AI 需要大量資源（如能源、礦物和水）來維持運算需求。開發和維持 AI 系統所需的能源和基礎設施會增加碳排放。AI 的長期永續性影響很大程度取決於其如何被實施和使用。",
+  "Knowledge: 2.1": "建立和維護 AI 系統依賴人類設計演算法、收集、管理、評估和標註資料，以及過濾有害內容。這些系統反映了人類的選擇、假設和勞動實踐，並受到不平等的全球條件影響。",
+  "Knowledge: 2.2": "AI 透過大量資料集進行訓練，這些資料來源於公開資訊、使用者生成的內容、策展資料庫或真實世界資料。這些資料集可能包含受版權保護的材料、合成資料、未經驗證的資訊，以及以不道德或未經同意的方式獲取的私人和公共資料。",
+  "Knowledge: 2.3": "AI 系統在與使用者互動的過程中可以收集資料，這些資料會即時影響決策、流程與輸出。",
+  "Knowledge: 2.4": "AI 系統被訓練來識別人類所選擇、分類和優先處理的資料元素中的模式。這種訓練也可能涉及強化學習，即 AI 系統透過與環境互動的反覆試錯來提升表現。",
+  "Knowledge: 2.5": "偏見固有地存在於 AI 系統中，這也可能反映出嵌入在訓練資料或演算法設計中的社會偏見。人類可能會（意外或故意地）增加或減輕這些偏見，這可能對個別使用者和整個社會產生深遠的影響。",
+  "Knowledge: 3.1": "AI 可以執行模式識別、自動化和內容創建等任務。儘管它在輸出中能模擬情感、倫理推理、批判性思考、背景脈絡和原創性，但它實際上缺乏這些人類特質。",
+  "Knowledge: 3.2": "生成式 AI（特別是大型語言模型）產生高度進階內容的能力，可能導致事實與虛構難以區分，增加了錯誤資訊/假訊息、「幻覺 (hallucinations)」、誤導和操縱的風險。",
+  "Knowledge: 3.3": "對於相同的輸入，AI 系統可能會產生不同的輸出，這取決於輸入本身以及 AI 系統被設計為選擇或優先考量特定特徵和參數的方式。",
+  "Knowledge: 3.4": "AI 系統及其底層演算法的透明度和可解釋性程度各不相同。在某些情況下，人們可能可以確定演算法是如何最佳化的；但在其他情況下，這很難或不可能實現。",
+  "Knowledge: 4.1": "AI 系統會影響日常生活中許多領域的決策。它們被用於具有正負面影響的任務。在所有 AI 應用中，人類必須行使主體性並保留做出有意圖且自主決策的能力。",
+  "Knowledge: 4.2": "應理解、審查和規範 AI 系統，以確保其使用能為個人和社會帶來最大利益並將傷害降至最低。",
+  "Knowledge: 4.3": "負責任且符合倫理的 AI 設計包含公平性、透明度、可解釋性、問責制、尊重隱私和合法合規。",
+  
+  // --- Skills (技能) ---
+  "Skills: Critical Thinking": "批判性思考 (Critical Thinking)：評估 AI 的使用與 AI 生成的內容的準確性、公平性與偏見，以做出明智且符合倫理的決策。這包含質疑資訊來源、驗證輸出，並反思自己的使用意圖。",
+  "Skills: Collaboration": "協作 (Collaboration)：透過清晰溝通、提供回饋及引導共同任務來指導與 AI 的互動。這包括反覆使用 AI，並持續借助同儕或老師的觀點來進行倫理推理與發揮創造力。",
+  "Skills: Creativity": "創造力 (Creativity)：使用 AI 來建立和反思原創想法，或探索新的想法。將 AI 視為激發靈感和尋求回饋的工具，並處理所有權與原創性的倫理問題。",
+  "Skills: Problem Solving": "解決問題 (Problem Solving)：透過評估 AI 的能力、風險與倫理意涵，來決定是否、何時以及如何將 AI 用於某項任務。定義問題、比較策略並評估輸出是否符合目標。",
+  "Skills: Computational Thinking": "運算思維 (Computational Thinking)：拆解問題並提供指令，讓 AI 系統能有效地協助解決問題。這包括了解如何建構人類的想法與問題，使 AI 能正確解讀（例如透過提示工程）。",
+  "Skills: Communication": "溝通 (Communication)：以促進透明度、避免擬人化並鼓勵負責任使用的方式描述 AI 運作原理。學習者能向他人解釋 AI 系統的目的，並解決對 AI 的誤解。",
+  "Skills: Self and Social Awareness": "自我與社會覺察 (Self and Social Awareness)：認識 AI 如何影響個人選擇、人際關係與社群，並反思其對社會與環境的更廣泛影響。思考誰是受益者或受害者，建立心理韌性並倡導負責任的使用。",
+
+  // --- Attitudes (態度) ---
+  "Attitudes: Reflective": "反思 (Reflective)：學習者質疑圍繞 AI 使用的假設與敘事，以確定 AI 可能如何融入自己的生活。他們批判性地評估 AI 工具與輸出，衡量機會與風險。",
+  "Attitudes: Responsible": "負責任 (Responsible)：學習者仔細思考他們如何使用 AI，並體認到必須對自己的選擇負責。他們考慮行為的預期與非預期影響，致力於防止對他人和環境造成傷害。",
+  "Attitudes: Curious": "好奇 (Curious)：學習者渴望探索目前 AI 能做什麼與不能做什麼，以及未來可能的發展。他們想了解 AI 的影響，將學習視為持續的過程並樂於嘗試。",
+  "Attitudes: Innovative": "創新 (Innovative)：學習者尋求使用 AI 來解決現實世界的挑戰並擁抱新機會。將自己視為受 AI 影響世界中的賦權使用者、決策者與積極創造者。",
+  "Attitudes: Adaptable": "適應性強 (Adaptable)：學習者在與 AI 工作時展現毅力與彈性。對多元想法持開放態度，了解學習與 AI 合作是一個由回饋和修正形塑的反覆過程。",
+  "Attitudes: Empathetic": "有同理心 (Empathetic)：學習者深思熟慮地檢視 AI 如何影響個人、社群與環境。了解 AI 可能帶來意想不到的結果，並考慮不同群體所受的影響及倫理意涵。"
+};
+
+// 莫蘭迪配色方案
+const MORANDI_COLORS = {
+  engage: { primary: "#6e839e", light: "#edf1f6", text: "#334155" },     // 莫蘭迪霧藍
+  create: { primary: "#91a384", light: "#f3f6f1", text: "#3f4a36" },     // 莫蘭迪灰綠
+  manage: { primary: "#c38370", light: "#f9f2f0", text: "#5c3327" },     // 莫蘭迪磚紅
+  shape:  { primary: "#9e8b9f", light: "#f6f3f6", text: "#4a3c4b" }      // 莫蘭迪藕紫
+};
+
+const domainsData = [
+  {
+    id: "engage",
+    title: "Engage with AI",
+    subtitle: "參與 AI",
+    description: "成為在受 AI 影響的世界中，具備批判性與責任感的參與者。",
+    color: MORANDI_COLORS.engage,
+    icon: <UserCheck className="w-8 h-8" />,
+    competences: [
+      {
+        id: "e1",
+        title: "1. 識別 AI 在不同情境中的角色與影響。",
+        tags: ["Knowledge: 1.4", "Skills: Self and Social Awareness", "Attitudes: Curious", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者能識別日常生活中不同類型 AI 的存在。",
+            classroom: "學習者與老師一起玩「是不是 AI」遊戲。給定智慧家庭設備、社群媒體或應用程式等範例，他們能根據是否使用 AI 來進行分類。"
+          },
+          intermediate: {
+            desc: "學習者能分享 AI 系統如何影響他們在家庭、學校或網路上的選擇與體驗。",
+            classroom: "學習者比較社群媒體平台上「為您推薦」頁面的範例，並反思他們如何以及為何受到所顯示內容的影響。"
+          },
+          advanced: {
+            desc: "學習者能分析 AI 系統如何形塑個人身為消費者、學習者、工作者及公民的信念與行為。",
+            classroom: "學習者探索 AI 聊天機器人和應用程式的截圖，識別其設計何時是為了說服而非提供資訊。討論如「連續登入紀錄」、角色名稱或過度順從的回應等功能，如何被設計來增加參與度。"
+          }
+        }
+      },
+      {
+        id: "e2",
+        title: "2. 使用能解決並釐清常見誤解的語言，來描述 AI 系統如何執行任務。",
+        tags: ["Knowledge: 1.3", "Knowledge: 1.4", "Skills: Communication", "Attitudes: Reflective", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者知道 AI 是一種非人類的工具，它根據資料模式產生輸出，且缺乏真實的背景脈絡或理解。",
+            classroom: "當老師介紹常被用來描述 AI 的短語（例如「AI 認為」）時，學習者能識別哪些是誤導性的，並使用技術上準確的語言發展出更好的描述。"
+          },
+          intermediate: {
+            desc: "學習者能準確描述特定的 AI 工具如何執行任務，以解決人們對 AI 運作方式的常見誤解。",
+            classroom: "學習者識別同儕間常見的 AI 迷思（例如「AI 像人類一樣理解」）。他們創建海報、短片來解釋 AI 的運作方式以打破迷思。"
+          },
+          advanced: {
+            desc: "學習者能使用不賦予人類特質或能力的語言來解釋不同 AI 系統的運作方式，並知道他們的用語會形塑理解。",
+            classroom: "分組練習解釋工具如何產生輸出，專注於程式化的過程而非人類特質。全班分享並反思不同的設計特徵如何影響對 AI 系統的理解與信任。"
+          }
+        }
+      },
+      {
+        id: "e3",
+        title: "3. 評估是否應該接受、修改或拒絕 AI 輸出。",
+        tags: ["Knowledge: 3.1", "Knowledge: 3.2", "Skills: Critical Thinking", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者了解為何應驗證 AI 生成的輸出，並知道如何自己驗證內容。",
+            classroom: "學習者檢視 AI 工具對數學問題的解答和解釋，然後將 AI 生成的內容與老師在課堂上介紹的流程進行比較。"
+          },
+          intermediate: {
+            desc: "學習者透過諮詢可信賴的來源並考慮特定任務的期望，來驗證 AI 生成輸出的準確性與相關性。",
+            classroom: "分組為遊客規劃行程。當老師提供 AI 餐廳建議時，學習者使用其他來源比對，判斷資訊是否過時、不準確或產生「幻覺」，決定是否採用。"
+          },
+          advanced: {
+            desc: "學習者評估 AI 生成的輸出，並為接受、修改或拒絕這些輸出的決定提出充分的理由。",
+            classroom: "當老師展示不同的 AI 生成的歷史事件解釋時，學習者求助於可信賴的一二手史料來驗證準確性，並論證他們會將哪一個納入最終報告。"
+          }
+        }
+      },
+      {
+        id: "e4",
+        title: "4. 檢視預測性 AI 系統如何提供能形塑或限制觀點的推薦。",
+        tags: ["Knowledge: 1.1", "Knowledge: 3.2", "Knowledge: 4.1", "Skills: Self and Social Awareness", "Attitudes: Curious", "Attitudes: Reflective"],
+        levels: {
+          basic: {
+            desc: "學習者知道 AI 可以使用使用者的資料來為他們提供推薦或預測。",
+            classroom: "學習者列出最喜歡的書籍角色的電影和電視推薦，並以文本證據說明。分享並討論後，將此過程與 AI 產生推薦的方式進行比較。"
+          },
+          intermediate: {
+            desc: "學習者思考 AI 生成的推薦何時對他們有幫助，或者何時可能顯得太狹隘或太籠統。",
+            classroom: "學習者比較音樂應用程式的推薦與自己的最愛清單，討論演算法是強化了現有的偏好還是向他們介紹了新類型。"
+          },
+          advanced: {
+            desc: "學習者衡量 AI 系統使用資料來形塑資訊存取方式的優缺點，並考慮這可能如何影響世界觀、想法或行為。",
+            classroom: "學習者回顧社群媒體推薦系統如何影響公眾對議題理解的案例研究，然後討論這可能如何影響個人的投票行為。"
+          }
+        }
+      },
+      {
+        id: "e5",
+        title: "5. 比較 AI 系統如何消耗能源與自然資源。",
+        tags: ["Knowledge: 1.5", "Skills: Self and Social Awareness", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者認識到電腦和 AI 系統需要資源才能運作。",
+            classroom: "學習者列出教室裡需要充電和冷卻的設備，並認識到 AI 系統同樣需要電力和硬體才能運作。"
+          },
+          intermediate: {
+            desc: "學習者描述 AI 影響環境的不同方式（例如硬體生產、資料中心發展、用水、能源密集度）。",
+            classroom: "學習者創建資訊產出物（如文章、播客或影片），解釋訓練大型 AI 模型與家庭或個人能源使用的比較。"
+          },
+          advanced: {
+            desc: "學習者分析個人選擇以及不同的設計、部署或商業決策如何影響 AI 總體的能源和資源消耗。",
+            classroom: "學習者研究 AI 使用和資料中心發展對不同社群的環境影響。然後識別促進負責任 AI 使用和發展的政策與策略。"
+          }
+        }
+      },
+      {
+        id: "e6",
+        title: "6. 解釋 AI 可能如何被用來放大社會偏見。",
+        tags: ["Knowledge: 2.1", "Knowledge: 2.5", "Knowledge: 4.1", "Skills: Critical Thinking", "Skills: Self and Social Awareness", "Attitudes: Empathetic", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者了解訓練 AI 的資料中可能存在偏見，當人類設計、開發和使用 AI 系統時，偏見可能會延續。",
+            classroom: "與老師一起探索可收集的關於一個人的不同類型資料。他們注意到資料能有效捕捉的細微差別，並從對彼此的了解中找出遺漏之處。"
+          },
+          intermediate: {
+            desc: "學習者解釋有偏見的資料或設計選擇如何導致 AI 系統對某些群體產生不公平或傾斜的結果。",
+            classroom: "學習者探索臉部辨識技術在不同人口統計資料中表現的差異，並討論當其被用於日常生活的決策時可能產生的現實影響。"
+          },
+          advanced: {
+            desc: "學習者分析個人、公司或機構可能如何建立和部署 AI 來服務特定利益，以及這些系統如何形塑機會、代表性或公眾認知。",
+            classroom: "評估 AI 被用來影響事件（如社群媒體上的假訊息）的真實案例。然後探索機構的 AI 選擇如何有利於某些群體，同時對其他群體產生負面影響。"
+          }
+        }
+      },
+      {
+        id: "e7",
+        title: "7. 分析 AI 系統的使用與倫理原則及人類價值的契合程度。",
+        tags: ["Knowledge: 1.4", "Knowledge: 4.1", "Knowledge: 4.3", "Skills: Critical Thinking", "Skills: Problem Solving", "Skills: Self and Social Awareness", "Attitudes: Reflective", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者認識到合乎倫理的 AI 使用取決於多種因素，包括 AI 系統設計、開發及使用者的意圖。",
+            classroom: "學習者識別 AI 生成作品中藝術家作品的可辨識特徵。與老師一起討論這些範例是否構成合理且適當的使用，並確定對人類藝術家的影響。"
+          },
+          intermediate: {
+            desc: "學習者識別 AI 使用何時可能產生與使用者直接目標不同的意外影響或意涵。",
+            classroom: "分析一個 AI 工具使用瀏覽紀錄來廣告折扣的案例。權衡省錢機會與隱私風險，並討論長期與短期的優缺點。"
+          },
+          advanced: {
+            desc: "學習者根據多項倫理原則評估 AI 的使用，考慮權衡取捨以及誰可能受益或受害。",
+            classroom: "探索 AI 如何用於分析氣候資料以進行預測。評估工具預測能力與透明度降低之間的權衡，並衡量更清晰預測的機會與「幻覺」的風險。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: "create",
+    title: "Create with AI",
+    subtitle: "與 AI 共創",
+    description: "將 AI 視為創意夥伴，同時保持人類的主導權與主體性。",
+    color: MORANDI_COLORS.create,
+    icon: <Lightbulb className="w-8 h-8" />,
+    competences: [
+      {
+        id: "c1",
+        title: "1. 使用 AI 系統探索新觀點與方法，以建立在原創想法之上。",
+        tags: ["Knowledge: 1.4", "Knowledge: 4.1", "Knowledge: 4.3", "Skills: Critical Thinking", "Skills: Problem Solving", "Skills: Self and Social Awareness", "Attitudes: Reflective", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者探索不同的 AI 工具如何擴展他們的思維或激發新想法。",
+            classroom: "學習者討論同學提出的故事設定（如「太空中的叢林」），查看 AI 生成的相關圖像，然後根據這些意想不到的結果寫出新故事。"
+          },
+          intermediate: {
+            desc: "學習者在腦力激盪過程中比較 AI 生成的建議與自己的想法。",
+            classroom: "回應老師的作業，學習者獨立腦力激盪後再審查 AI 的想法。他們比較兩者，並討論接觸 AI 建議如何影響原創性、信心或決策。"
+          },
+          advanced: {
+            desc: "學習者有目的地將 AI 生成的輸出與自己的想法結合，發展出全面的解決方案與創新方法。",
+            classroom: "學習者為班級辯論發展自己的論點，然後分析老師提供的 AI 生成反方論點。他們混合或拒絕這些反駁，以強化最終論點。"
+          }
+        }
+      },
+      {
+        id: "c2",
+        title: "2. 使用不同類型的 AI 系統來視覺化、製作原型並結合想法。",
+        tags: ["Knowledge: 1.4", "Skills: Collaboration", "Skills: Creativity", "Attitudes: Adaptable", "Attitudes: Curious"],
+        levels: {
+          basic: {
+            desc: "學習者使用 AI 生成圖像、故事或模型來代表一個想法。",
+            classroom: "選擇一個主題（如「希望」、「冬天」）使用 AI 圖像生成器。寫下簡短解釋說明提示詞如何影響結果，並評估與心中想法的契合度。"
+          },
+          intermediate: {
+            desc: "學習者嘗試使用 AI 工具（如文本、圖像或音樂生成器）來發展多樣化的想法並產生各種輸出。",
+            classroom: "學習者設計學校新社團的概念。使用生成器產生多種任務聲明、活動和視覺風格，比較不同提示和工具如何產生同一想法的各種詮釋。"
+          },
+          advanced: {
+            desc: "學習者選擇並整合來自多個 AI 系統的輸出，以發展、完善或呈現最終產品。",
+            classroom: "使用文本生成大綱、圖像生成視覺化、程式碼助手草擬程式碼，設計一個簡單的互動專案。確保所有元素整合成一個功能原型並尋求同儕回饋。"
+          }
+        }
+      },
+      {
+        id: "c3",
+        title: "3. 引導生成式 AI 系統以獲取回饋、優化結果並支持反思。",
+        tags: ["Knowledge: 2.3", "Knowledge: 3.3", "Skills: Computational Thinking", "Skills: Creativity", "Attitudes: Adaptable", "Attitudes: Innovative"],
+        levels: {
+          basic: {
+            desc: "學習者知道如何對 AI 系統下提示 (prompt)，以產生準確的回饋和對想法有幫助的回應。",
+            classroom: "學習者觀察兩個不同版本的提示，比較 AI 生成的回應，分析哪一個獲得了更有用的回饋，並解釋具體特徵（如上下文、限制）的影響。"
+          },
+          intermediate: {
+            desc: "學習者透過與 AI 的反覆交流來優化他們的作品，並將輸出與自己的想法比較以達成目標。",
+            classroom: "學習者設計幾何花園的三維模型。將 AI 建議的尺寸與自己的計算結果進行比較以確保數學準確性，並考慮新的創意方法來改進設計。"
+          },
+          advanced: {
+            desc: "學習者批判性地評估 AI 生成的回饋如何形塑他們自己的想法，然後反思他們希望如何在創意過程中使用 AI。",
+            classroom: "學習者將寫作初稿與根據 AI 回饋修改後的最終版本進行比較。標註關鍵修改處，說明哪些建議被採納或忽略，以及如何達到目標。"
+          }
+        }
+      },
+      {
+        id: "c4",
+        title: "4. 分析 AI 如何保護或侵犯內容的真實性與智慧財產權。",
+        tags: ["Knowledge: 1.4", "Skills: Collaboration", "Skills: Creativity", "Attitudes: Adaptable", "Attitudes: Curious"],
+        levels: {
+          basic: {
+            desc: "學習者知道 AI 生成的內容可能重複使用或複製受智財權保護的作品，並認識到對原創者的影響。",
+            classroom: "學習者檢查模仿著名藝術家生成的 AI 音樂。與老師討論這如何引發版權、所有權和給予藝術家適當歸屬的擔憂。"
+          },
+          intermediate: {
+            desc: "學習者考慮對於一項創意任務，何時適當歸屬、請求許可或避免使用 AI 是適當的，並應用於自己的作品。",
+            classroom: "學習者比較原創作品與 AI 生成的詩歌，然後與老師討論什麼是「原創」。接著他們確定學校關於註明 AI 使用的準則。"
+          },
+          advanced: {
+            desc: "學習者評估 AI 生成輸出對創意作品的倫理意涵，區分靈感與複製，並證明他們使用 AI 的方式維持了真實性並尊重其他創作者。",
+            classroom: "學習者審視全人類、全 AI 以及人類加 AI 創作的藝術品。考慮人類做了哪些選擇、誰應被視為藝術家、什麼應受版權保護。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: "manage",
+    title: "Manage AI",
+    subtitle: "管理 AI",
+    description: "有意圖地在人類與 AI 之間分配工作與任務。",
+    color: MORANDI_COLORS.manage,
+    icon: <BookOpen className="w-8 h-8" />,
+    competences: [
+      {
+        id: "m1",
+        title: "1. 根據任務性質決定是否使用 AI 系統。",
+        tags: ["Knowledge: 3.1", "Knowledge: 4.3", "Skills: Computational Thinking", "Skills: Problem Solving", "Attitudes: Innovative", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者識別各種 AI 系統及其設計用來支援的任務。",
+            classroom: "學習者遵循老師建立的指導方針，將適當的工具與學術任務配對（例如，用 AI 進行總結，用搜尋引擎進行研究）。"
+          },
+          intermediate: {
+            desc: "學習者利用他們對 AI 的了解來判斷 AI 是否為特定任務的適當數位工具。",
+            classroom: "老師說出日常任務範例，學習者根據是否能用 AI，移動到「僅 AI」、「AI輔助」、「僅人類」角落，並向同儕辯護解釋選擇。"
+          },
+          advanced: {
+            desc: "學習者透過比較任務的複雜性、人類判斷的需求以及使用 AI 的倫理意涵，來決定 AI 是否為特定任務的正確數位工具。",
+            classroom: "考慮寫論文的步驟，識別哪些步驟 AI 可以協助，哪些需要自己的聲音和推理。他們參考學校的 AI 使用指南來調整策略。"
+          }
+        }
+      },
+      {
+        id: "m2",
+        title: "2. 透過比較不同 AI 系統的運作方式及最擅長的事務，為任務選擇適當的 AI 策略。",
+        tags: ["Knowledge: 1.2", "Knowledge: 1.4", "Skills: Computational Thinking", "Skills: Problem Solving", "Attitudes: Adaptable", "Attitudes: Curious"],
+        levels: {
+          basic: {
+            desc: "學習者認識到某些 AI 系統可透過特定規則程式化來完成任務，而其他系統能從資料中學習模式。",
+            classroom: "學習者比較遵循設定規則的技術（如計算機、紅綠燈）與受過資料訓練的技術（如圖像辨識）。與老師探討為何每種方法適合其特定任務。"
+          },
+          intermediate: {
+            desc: "學習者識別使用基於規則的方法與機器學習方法解決問題的優缺點。",
+            classroom: "透過垃圾分類任務，比較隨機輸出為何無效，指導扮演機器人的同學遵循規則分類，然後探索如何使用調查資料來改善決策。"
+          },
+          advanced: {
+            desc: "學習者考慮情境、資料可用性和品質、效率、透明度、預期結果與潛在影響等因素，評估 AI 何時為有效的策略。",
+            classroom: "分析現實世界的 AI 使用案例（如路線規劃、內容審核），證明基於規則或機器學習哪個更合適。建立論點並在班級辯論中提出。"
+          }
+        }
+      },
+      {
+        id: "m3",
+        title: "3. 拆解問題以決定何時以及如何使用 AI 系統來自動化或擴增任務。",
+        tags: ["Knowledge: 1.1", "Knowledge: 3.1", "Skills: Collaboration", "Skills: Computational Thinking", "Skills: Problem Solving", "Attitudes: Adaptable", "Attitudes: Innovative"],
+        levels: {
+          basic: {
+            desc: "學習者識別手邊問題的類型，並考慮 AI 是否可能幫助解決它。",
+            classroom: "給予學習者不同問題的範例（例如預測天氣、安慰朋友、偵測抄襲），對其進行分類，並討論 AI 是否能幫忙，以及是否總是需要 AI 解決方案。"
+          },
+          intermediate: {
+            desc: "學習者將問題分解為幾個組成部分，並考慮 AI 可能幫助特定步驟的方法。",
+            classroom: "分解完成複雜研究專案的步驟，找出 AI 可以支援的步驟（如總結原始資料）。然後獨立工作驗證聲明、評估偏見並發展自己的論點。"
+          },
+          advanced: {
+            desc: "學習者根據適當的人類優勢和相關的 AI 能力，在多步驟流程中刻意分配任務。",
+            classroom: "挑戰製作同一產品的兩個版本（使用與不使用 AI）。在開始前，團隊決定哪些步驟依賴 AI，哪些依賴人類。完成後比較結果並反思。"
+          }
+        }
+      },
+      {
+        id: "m4",
+        title: "4. 在整個解決問題的過程中監控和評估 AI 的使用。",
+        tags: ["Knowledge: 4.1", "Skills: Collaboration", "Skills: Problem Solving", "Attitudes: Adaptable", "Attitudes: Reflective", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者認識到他們應該做出支持問責制、學習和公平性的 AI 使用決策。",
+            classroom: "學習者探索跨產業（如體育、新聞、音樂）的 AI 工具範例，以確定在哪些任務中 AI 可能具有優勢，以及人類何時應該發揮更積極的作用。"
+          },
+          intermediate: {
+            desc: "學習者比較 AI 輸出與預期結果，並知道何時應重新引導 AI 系統或自行改善輸出。",
+            classroom: "觀看自駕車導航的短片。全班比較人類的決定與自駕車的不同，並討論人類判斷何時應推翻演算法。"
+          },
+          advanced: {
+            desc: "學習者根據人類和 AI 的角色建立檢查點，根據成功標準監控進度，並相應調整角色。",
+            classroom: "團隊為當地議題創建公眾意識宣傳活動。使用 AI 生成內容，但暫停以比較輸出與專案目標。當 AI 內容產生誤導時，調整工作流程以產生準確訊息。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: "shape",
+    title: "Shape AI",
+    subtitle: "形塑 AI",
+    description: "改善 AI 系統以反映人類價值與社會利益。",
+    color: MORANDI_COLORS.shape,
+    icon: <Edit3 className="w-8 h-8" />,
+    competences: [
+      {
+        id: "s1",
+        title: "1. 調查 AI 系統預期的運作方式、設計對象及其限制。",
+        tags: ["Knowledge: 1.2", "Knowledge: 2.1", "Skills: Communication", "Skills: Problem Solving", "Skills: Self and Social Awareness", "Attitudes: Curious", "Attitudes: Reflective", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者識別不同 AI 系統被設計用來做什麼。",
+            classroom: "學習者檢視描述 AI 系統運作方式、其訓練資料、預期用途及可能限制的模型卡 (model cards)。全班一起討論該 AI 系統的適當用途。"
+          },
+          intermediate: {
+            desc: "學習者用簡單的話描述特定 AI 工具的目的、目標使用者和基本限制。",
+            classroom: "檢視幾個 AI 工具範例（如聊天機器人、路線規劃App）。學習者識別其主要任務，用簡單語言解釋它使用什麼輸入及輸出如何執行任務。"
+          },
+          advanced: {
+            desc: "學習者透過考慮 AI 工具的目的、目標使用者、限制及潛在影響，來評估其優勢與局限性。",
+            classroom: "分析導航 App 如何使用交通資料建議路線。討論該 App 可能為某些人減少旅行時間，同時卻增加特定社區的擁堵、噪音或安全風險。"
+          }
+        }
+      },
+      {
+        id: "s2",
+        title: "2. 使用定義的標準、預期結果、測試案例與使用者回饋來評估 AI 系統。",
+        tags: ["Knowledge: 1.2", "Knowledge: 1.4", "Skills: Collaboration", "Skills: Computational Thinking", "Attitudes: Adaptable", "Attitudes: Innovative", "Attitudes: Reflective"],
+        levels: {
+          basic: {
+            desc: "學習者定義 AI 系統是否完成任務的標準。",
+            classroom: "學習者檢查推薦新音樂的 AI 系統。小組定義成功標準，並比較系統對具有不同興趣或互動歷史的使用者所做的推薦。"
+          },
+          intermediate: {
+            desc: "學習者使用定義的標準與人類評論的基準測試，評估 AI 系統執行任務的表現。",
+            classroom: "學習者識別解決字謎的策略。老師展示該任務的演算法範例。學習者使用標準（如效率、一致性）比較同儕策略與演算法的優缺點。"
+          },
+          advanced: {
+            desc: "學習者自行設計 AI 系統的評估標準，比較不同輸入及使用者的表現，並提出改進建議。",
+            classroom: "兩人一組草擬 AI 工具提案並互相提問。為對方的想法填寫模型卡（預期使用者、影響）。根據回饋修改自己的提案。"
+          }
+        }
+      },
+      {
+        id: "s3",
+        title: "3. 設計 AI 系統時注意資料來源、選擇和資訊流如何影響行為與輸出。",
+        tags: ["Knowledge: 1.2", "Knowledge: 2.2", "Knowledge: 2.4", "Skills: Computational Thinking", "Skills: Self and Social Awareness", "Attitudes: Innovative", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者識別可能用於訓練 AI 系統的資料範例。",
+            classroom: "任務是設計能分類可回收物的 AI。小組決定可以在網路上收集哪些資料，並與老師討論資料的哪些方面對訓練準確的 AI 最重要。"
+          },
+          intermediate: {
+            desc: "學習者在 AI 用於影響他人的決策時，比較資料選擇和收集方法的重要性。",
+            classroom: "比較不同的動物分組方法（例如基於身體特徵）。討論當引入不適合現有組別的新動物時會發生什麼事。"
+          },
+          advanced: {
+            desc: "學習者評估資料集的特定屬性（如大小、特徵、偏見）如何影響 AI 模型的表現與影響。",
+            classroom: "進行班級寵物調查並製作長條圖。與更廣泛的調查資料比較。討論增加資料集大小與多樣性如何改變結果，並思考 AI 訓練資料的關聯。"
+          }
+        }
+      },
+      {
+        id: "s4",
+        title: "4. 改善 AI 系統以解決和促進人類福祉與社會利益。",
+        tags: ["Knowledge: 4.1", "Knowledge: 4.2", "Knowledge: 4.3", "Skills: Computational Thinking", "Skills: Problem Solving", "Skills: Self and Social Awareness", "Attitudes: Empathetic", "Attitudes: Innovative", "Attitudes: Responsible"],
+        levels: {
+          basic: {
+            desc: "學習者認識到可以設計或調整 AI 系統，以更好地支持個人、社群與環境。",
+            classroom: "討論日常挑戰（如尋找學習資源）。探索 AI 工具並識別可使其更具包容性的小改變（如更清晰的說明），並解釋誰會從中受益。"
+          },
+          intermediate: {
+            desc: "學習者提出具體的設計變更，以改善自己和他人的 AI 系統。",
+            classroom: "考慮預測圖書館熱門書籍的 AI 工具。建議具體的改變（增加使用者輸入、調整類別）以提高獲取性和包容性，支持不同需求的學習者。"
+          },
+          advanced: {
+            desc: "學習者根據技術限制、倫理考量與使用者需求，設計並證明對 AI 系統的改進。",
+            classroom: "設計或修改模型以提醒氣喘患者環境健康風險。針對包含哪些資料及如何發送警報做出審慎決定，測試並改進以建立社區信任。"
+          }
+        }
+      }
+    ]
+  }
+];
+
+// 單個標籤元件 (使用大地暖色調)
+const TagBadge = ({ tag, onClick }) => {
+  let tagStyle = "bg-[#f5f0eb] text-[#6b5c53] border-[#e6dbd0] hover:bg-[#ebe2d8]"; // 預設暖灰
+  if (tag.startsWith("Knowledge")) tagStyle = "bg-[#fef4e8] text-[#9c6a38] border-[#f5e3cd] hover:bg-[#faeedd]"; 
+  if (tag.startsWith("Skills")) tagStyle = "bg-[#eff5f0] text-[#4d7358] border-[#d8e6dc] hover:bg-[#e4ede6]";
+  if (tag.startsWith("Attitudes")) tagStyle = "bg-[#f9f0f5] text-[#8a5a7b] border-[#eedce6] hover:bg-[#f3e5ee]";
+
+  return (
+    <span 
+      onClick={(e) => {
+        e.stopPropagation(); // 確保不會觸發外層的折疊面板
+        onClick(tag);
+      }}
+      className={`inline-flex items-center px-3 py-1.5 m-1 rounded-full text-xs font-bold border cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-sm ${tagStyle}`}
+      title="點擊查看完整敘述"
+    >
+      <Info className="w-3.5 h-3.5 mr-1.5 opacity-80" />
+      {tag}
+    </span>
+  );
+};
+
+export default function App() {
+  const [selectedDomain, setSelectedDomain] = useState(domainsData[0]);
+  const [expandedComp, setExpandedComp] = useState(null);
+  const [modalContent, setModalContent] = useState(null);
+
+  const handleTagClick = (tag) => {
+    const description = tagDefinitions[tag] || "系統找不到此標籤的詳細定義，請確認標籤名稱是否吻合。";
+    setModalContent({ title: tag, description });
+  };
+
+  return (
+    <div className="min-h-screen bg-[#faf8f5] font-sans text-[#3d3935] pb-16">
+      {/* 頂部導航列 */}
+      <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-[#ece8e2] py-6 px-8 mb-10 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center">
+          <div>
+            <h1 className="text-3xl font-extrabold text-[#2a2825] tracking-tight">AI Literacy Framework</h1>
+            <p className="text-[#8c8279] mt-1.5 font-medium text-sm sm:text-base">Empowering Learners for the Age of AI - 互動教學儀表板</p>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* 領域選擇卡片 (Domain Selection) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {domainsData.map((domain) => {
+            const isSelected = selectedDomain?.id === domain.id;
+            return (
+              <div 
+                key={domain.id}
+                onClick={() => {
+                  setSelectedDomain(domain);
+                  setExpandedComp(null);
+                }}
+                className={`rounded-2xl p-6 cursor-pointer transition-all duration-300 border-2 relative overflow-hidden group shadow-sm
+                  ${isSelected 
+                    ? `shadow-lg transform -translate-y-1` 
+                    : 'border-[#eae5de] bg-white hover:shadow-md hover:-translate-y-0.5 hover:border-[#d4cdc4]'
+                  }
+                `}
+                style={isSelected ? { 
+                  backgroundColor: domain.color.primary, 
+                  borderColor: domain.color.primary 
+                } : {}}
+              >
+                <div className="relative z-10">
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-5 shadow-sm transition-colors duration-300
+                    ${isSelected ? 'bg-white/25 text-white' : 'bg-[#f4f1ed] text-[#8c8279] group-hover:bg-[#ebe6e0]'}`}>
+                    {React.cloneElement(domain.icon, { className: `w-7 h-7` })}
+                  </div>
+                  <h2 className={`text-xl font-extrabold mb-1.5 ${isSelected ? 'text-white' : 'text-[#3d3935]'}`}>
+                    {domain.title}
+                  </h2>
+                  <p className={`text-sm font-bold mb-3 ${isSelected ? 'text-white/90' : 'text-[#9c938a]'}`}>
+                    {domain.subtitle}
+                  </p>
+                  <p className={`text-sm leading-relaxed font-medium ${isSelected ? 'text-white/80' : 'text-[#706861]'}`}>
+                    {domain.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Competences 列表 */}
+        {selectedDomain && (
+          <div className="animate-fade-in-up">
+            <div className="flex items-center mb-6 pl-2">
+              <div className="w-2 h-8 rounded-full mr-3" style={{ backgroundColor: selectedDomain.color.primary }}></div>
+              <h3 className="text-2xl font-bold text-[#2a2825]">
+                {selectedDomain.title} 能力指標
+              </h3>
+            </div>
+
+            <div className="space-y-5">
+              {selectedDomain.competences.map((comp) => {
+                const isExpanded = expandedComp === comp.id;
+                return (
+                  <div key={comp.id} className="bg-white border border-[#eae5de] rounded-2xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
+                    {/* 折疊標題列 */}
+                    <div 
+                      onClick={() => setExpandedComp(isExpanded ? null : comp.id)}
+                      className="px-6 py-5 cursor-pointer flex justify-between items-center transition-colors"
+                      style={{ backgroundColor: isExpanded ? selectedDomain.color.light : 'white' }}
+                    >
+                      <h4 className="text-lg font-bold text-[#3d3935] pr-8 leading-relaxed">{comp.title}</h4>
+                      <div className="p-2 rounded-full bg-white/50 shadow-sm flex-shrink-0">
+                        {isExpanded ? <ChevronUp className="w-5 h-5 text-[#8c8279]" /> : <ChevronDown className="w-5 h-5 text-[#8c8279]" />}
+                      </div>
+                    </div>
+
+                    {/* 展開內容 */}
+                    {isExpanded && (
+                      <div className="px-6 pb-8 border-t border-[#f0ebe4]">
+                        {/* 醒目標籤區 */}
+                        <div className="py-5 mb-4 bg-[#fcfbfa] rounded-xl px-5 mt-6 border border-[#f0ebe4] shadow-inner">
+                          <span className="text-sm font-bold text-[#706861] mr-2 flex items-center mb-3">
+                            <BookOpen className="w-4 h-4 mr-2" style={{ color: selectedDomain.color.primary }} />
+                            對應學習要素：
+                          </span>
+                          <div className="flex flex-wrap items-center gap-1">
+                            {comp.tags.map((tag, idx) => (
+                              <TagBadge key={idx} tag={tag} onClick={handleTagClick} />
+                            ))}
+                          </div>
+                          <p className="text-xs text-[#a39b94] mt-3 ml-1">💡 提示：點擊上方醒目標籤即可查看完整翻譯敘述</p>
+                        </div>
+
+                        {/* 三個階段等級 (Levels) */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+                          {/* 基礎 (Basic) */}
+                          <div className="flex flex-col bg-[#fdfdfc] border border-[#f0ebe4] rounded-2xl overflow-hidden shadow-sm">
+                            <div className="bg-[#f7f5f2] px-5 py-3 border-b border-[#f0ebe4]">
+                              <span className="inline-block bg-white border border-[#e6dbd0] text-[#6b5c53] px-3 py-1 rounded-md text-sm font-bold shadow-sm">
+                                基礎 (Basic)
+                              </span>
+                            </div>
+                            <div className="p-6 flex-grow flex flex-col">
+                              <p className="text-[#3d3935] font-medium leading-relaxed mb-6 flex-grow">{comp.levels.basic.desc}</p>
+                              <div className="bg-[#faf8f5] p-5 rounded-xl border border-[#f0ebe4]">
+                                <span className="text-[#8c8279] font-bold text-sm flex items-center mb-2">
+                                  👨‍🏫 課堂情境 (In the Classroom)
+                                </span>
+                                <p className="text-sm text-[#5a544e] leading-relaxed">{comp.levels.basic.classroom}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 中階 (Intermediate) */}
+                          <div className="flex flex-col bg-[#fdfdfc] border border-[#f0ebe4] rounded-2xl overflow-hidden shadow-sm">
+                            <div className="bg-[#f7f5f2] px-5 py-3 border-b border-[#f0ebe4]">
+                              <span className="inline-block bg-white border border-[#e6dbd0] text-[#6b5c53] px-3 py-1 rounded-md text-sm font-bold shadow-sm">
+                                中階 (Intermediate)
+                              </span>
+                            </div>
+                            <div className="p-6 flex-grow flex flex-col">
+                              <p className="text-[#3d3935] font-medium leading-relaxed mb-6 flex-grow">{comp.levels.intermediate.desc}</p>
+                              <div className="bg-[#faf8f5] p-5 rounded-xl border border-[#f0ebe4]">
+                                <span className="text-[#8c8279] font-bold text-sm flex items-center mb-2">
+                                  👨‍🏫 課堂情境 (In the Classroom)
+                                </span>
+                                <p className="text-sm text-[#5a544e] leading-relaxed">{comp.levels.intermediate.classroom}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 進階 (Advanced) */}
+                          <div className="flex flex-col bg-[#fdfdfc] border border-[#f0ebe4] rounded-2xl overflow-hidden shadow-sm">
+                            <div className="bg-[#f7f5f2] px-5 py-3 border-b border-[#f0ebe4]">
+                              <span className="inline-block bg-white border border-[#e6dbd0] text-[#6b5c53] px-3 py-1 rounded-md text-sm font-bold shadow-sm">
+                                進階 (Advanced)
+                              </span>
+                            </div>
+                            <div className="p-6 flex-grow flex flex-col">
+                              <p className="text-[#3d3935] font-medium leading-relaxed mb-6 flex-grow">{comp.levels.advanced.desc}</p>
+                              <div className="bg-[#faf8f5] p-5 rounded-xl border border-[#f0ebe4]">
+                                <span className="text-[#8c8279] font-bold text-sm flex items-center mb-2">
+                                  👨‍🏫 課堂情境 (In the Classroom)
+                                </span>
+                                <p className="text-sm text-[#5a544e] leading-relaxed">{comp.levels.advanced.classroom}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* 強制置頂、高對比度的互動式 Modal */}
+      {modalContent && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-4 transition-opacity" 
+          style={{ zIndex: 9999, backgroundColor: 'rgba(0, 0, 0, 0.55)' }} 
+          onClick={() => setModalContent(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform overflow-hidden flex flex-col border border-[#ece8e2]" 
+            onClick={(e) => e.stopPropagation()} // 避免點擊內容區塊時關閉
+          >
+            <div className="px-6 py-5 border-b border-[#eae5de] flex justify-between items-center bg-[#fdfdfc]">
+              <h3 className="text-xl font-extrabold text-[#2a2825] flex items-center">
+                <Info className="w-6 h-6 mr-3 text-[#c38370]" />
+                {modalContent.title}
+              </h3>
+              <button 
+                onClick={() => setModalContent(null)}
+                className="text-[#9c938a] hover:text-[#3d3935] hover:bg-[#f4f1ed] p-2 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-7 bg-white min-h-[140px] flex items-center">
+              {/* 強制設定高對比度的深灰色文字，確保絕不會看不清楚 */}
+              <p className="text-[#3d3935] text-lg leading-relaxed font-bold tracking-wide">
+                {modalContent.description}
+              </p>
+            </div>
+            <div className="px-6 py-4 bg-[#fcfbfa] text-right border-t border-[#eae5de]">
+              <button 
+                onClick={() => setModalContent(null)}
+                className="bg-[#2a2825] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#4a4742] transition-colors shadow-md"
+              >
+                我知道了
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
